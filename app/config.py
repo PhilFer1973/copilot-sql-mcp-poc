@@ -10,17 +10,27 @@ from typing import Literal
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LEGACY_DIR = PROJECT_ROOT / "legacy"
+DEFAULT_APPROVED_SCHEMAS = ("Application", "Sales", "Purchasing", "Warehouse")
+
+
+class ConfigError(ValueError):
+    """Raised when required runtime configuration is invalid."""
 
 
 @dataclass(frozen=True)
 class DatabaseConfig:
     host: str
     database: str
+    port: int | None = None
     user: str = ""
     password: str = ""
     driver: str = "ODBC Driver 17 for SQL Server"
+    encrypt: bool = False
     trust_server_certificate: bool = True
+    auth_mode: Literal["windows", "sql"] = "windows"
     timeout_seconds: int = 15
+    max_query_rows: int = 500
+    approved_schemas: tuple[str, ...] = DEFAULT_APPROVED_SCHEMAS
 
 
 @dataclass(frozen=True)
@@ -40,16 +50,37 @@ class HttpServerConfig:
 
 def get_database_config() -> DatabaseConfig:
     """Read the legacy-compatible database configuration from the environment."""
+    user = os.environ.get("SQLSERVER_USER", "")
+    password = os.environ.get(
+        "SQLSERVER_PASSWORD",
+        os.environ.get("SQLSERVER_PASS", ""),
+    )
+    auth_mode = os.environ.get("SQLSERVER_AUTH_MODE", "").lower()
+    if not auth_mode:
+        auth_mode = "sql" if user or password else "windows"
+
+    approved_schemas = tuple(
+        schema.strip()
+        for schema in os.environ.get(
+            "SQLSERVER_APPROVED_SCHEMAS",
+            ",".join(DEFAULT_APPROVED_SCHEMAS),
+        ).split(",")
+        if schema.strip()
+    )
+
     return DatabaseConfig(
         host=os.environ.get("SQLSERVER_HOST", "050027346-3"),
         database=os.environ.get("SQLSERVER_DB", "WideWorldImporters"),
-        user=os.environ.get("SQLSERVER_USER", ""),
-        password=os.environ.get(
-            "SQLSERVER_PASSWORD",
-            os.environ.get("SQLSERVER_PASS", ""),
-        ),
+        port=_optional_int(os.environ.get("SQLSERVER_PORT"), "SQLSERVER_PORT"),
+        user=user,
+        password=password,
         driver=os.environ.get("SQLSERVER_DRIVER", "ODBC Driver 17 for SQL Server"),
-        timeout_seconds=int(os.environ.get("QUERY_TIMEOUT_SECONDS", "15")),
+        encrypt=_bool_from_env("SQLSERVER_ENCRYPT", default=False),
+        trust_server_certificate=_bool_from_env("SQLSERVER_TRUST_CERT", default=True),
+        auth_mode=auth_mode,  # type: ignore[arg-type]
+        timeout_seconds=_positive_int("QUERY_TIMEOUT_SECONDS", default=15),
+        max_query_rows=_positive_int("MAX_QUERY_ROWS", default=500),
+        approved_schemas=approved_schemas or DEFAULT_APPROVED_SCHEMAS,
     )
 
 
@@ -83,14 +114,19 @@ def get_app_paths() -> AppPaths:
 
 def build_connection_string(config: DatabaseConfig) -> str:
     """Build the same ODBC connection string shape used by the legacy server."""
+    validate_database_config(config)
+
+    server = config.host if config.port is None else f"{config.host},{config.port}"
+    encrypt = "yes" if config.encrypt else "no"
     trust = "yes" if config.trust_server_certificate else "no"
     base = (
         f"DRIVER={{{config.driver}}};"
-        f"SERVER={config.host};"
+        f"SERVER={server};"
         f"DATABASE={config.database};"
+        f"Encrypt={encrypt};"
     )
 
-    if config.user and config.password:
+    if config.auth_mode == "sql":
         return (
             base
             + f"UID={config.user};"
@@ -99,3 +135,67 @@ def build_connection_string(config: DatabaseConfig) -> str:
         )
 
     return base + "Trusted_Connection=yes;" + f"TrustServerCertificate={trust};"
+
+
+def validate_database_config(config: DatabaseConfig) -> None:
+    """Validate database settings before opening a connection."""
+    errors: list[str] = []
+
+    if not config.host.strip():
+        errors.append("SQLSERVER_HOST is required.")
+    if not config.database.strip():
+        errors.append("SQLSERVER_DB is required.")
+    if config.auth_mode not in {"windows", "sql"}:
+        errors.append("SQLSERVER_AUTH_MODE must be 'windows' or 'sql'.")
+    if config.auth_mode == "sql":
+        if not config.user:
+            errors.append("SQLSERVER_USER is required when SQLSERVER_AUTH_MODE=sql.")
+        if not config.password:
+            errors.append("SQLSERVER_PASSWORD is required when SQLSERVER_AUTH_MODE=sql.")
+    if config.timeout_seconds < 1:
+        errors.append("QUERY_TIMEOUT_SECONDS must be greater than zero.")
+    if config.max_query_rows < 1:
+        errors.append("MAX_QUERY_ROWS must be greater than zero.")
+    if not config.approved_schemas:
+        errors.append("At least one approved schema is required.")
+
+    if errors:
+        raise ConfigError(" ".join(errors))
+
+
+def _positive_int(name: str, default: int) -> int:
+    value = os.environ.get(name)
+    if value in {None, ""}:
+        return default
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise ConfigError(f"{name} must be an integer.") from error
+    if parsed < 1:
+        raise ConfigError(f"{name} must be greater than zero.")
+    return parsed
+
+
+def _optional_int(value: str | None, name: str) -> int | None:
+    if value in {None, ""}:
+        return None
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise ConfigError(f"{name} must be an integer.") from error
+    if parsed < 1:
+        raise ConfigError(f"{name} must be greater than zero.")
+    return parsed
+
+
+def _bool_from_env(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value in {None, ""}:
+        return default
+
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off"}:
+        return False
+    raise ConfigError(f"{name} must be a boolean value.")

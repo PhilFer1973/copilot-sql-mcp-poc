@@ -21,11 +21,14 @@ class DatabaseClient:
         self,
         connection_string: str | None = None,
         timeout_seconds: int | None = None,
+        max_query_rows: int | None = None,
         query_logger: QueryLogger = log_query,
     ) -> None:
         config = get_database_config()
         self.connection_string = connection_string or build_connection_string(config)
         self.timeout_seconds = timeout_seconds or config.timeout_seconds
+        self.max_query_rows = max_query_rows or config.max_query_rows
+        self.approved_schemas = config.approved_schemas
         self.query_logger = query_logger
 
     def get_connection(self):
@@ -34,14 +37,19 @@ class DatabaseClient:
 
     def run_query(self, sql: str, max_rows: int = 500) -> list[dict[str, Any]]:
         """Execute a SELECT query and return rows as a list of dictionaries."""
+        effective_max_rows = min(max_rows, self.max_query_rows)
         conn = None
         cursor = None
         try:
             conn = self.get_connection()
             cursor = conn.cursor()
+            cursor.timeout = self.timeout_seconds
             cursor.execute(sql)
             columns = [col[0] for col in cursor.description]
-            rows = [dict(zip(columns, row)) for row in cursor.fetchmany(max_rows)]
+            rows = [
+                dict(zip(columns, row))
+                for row in cursor.fetchmany(effective_max_rows)
+            ]
             self.query_logger(sql, len(rows))
             return rows
         finally:

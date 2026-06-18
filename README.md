@@ -5,7 +5,7 @@ WideWorldImporters data through MCP.
 
 ## Current Milestone
 
-Milestone 5: local Streamable HTTP MCP server.
+Milestone 6: database configuration and SQL safety controls.
 
 Status:
 
@@ -28,6 +28,10 @@ Status:
 - [x] Streamable HTTP entry point added as `server_http.py`.
 - [x] `/health` endpoint added.
 - [x] MCP HTTP endpoint defaults to `/mcp`.
+- [x] Windows and SQL authentication modes configured through environment variables.
+- [x] Query timeout, max rows, encryption, trust certificate, and approved schemas are configurable.
+- [x] Cross-database, system object, unapproved schema, unqualified table, and `SELECT INTO` queries are rejected.
+- [x] `.env.example` added without secrets.
 - [ ] Manual Cursor acceptance questions verified against live SQL Server.
 
 ## Local STDIO Server
@@ -70,11 +74,18 @@ legacy/sqlserver_mcp_wwi_cursor_apps_business.py
 The refactored server keeps the legacy local defaults:
 
 - `SQLSERVER_HOST`, default `050027346-3`
+- `SQLSERVER_PORT`, optional
 - `SQLSERVER_DB`, default `WideWorldImporters`
+- `SQLSERVER_AUTH_MODE`, `windows` or `sql`
 - `SQLSERVER_USER`, optional
 - `SQLSERVER_PASS`, optional legacy password variable
 - `SQLSERVER_PASSWORD`, optional preferred password variable
 - `SQLSERVER_DRIVER`, default `ODBC Driver 17 for SQL Server`
+- `SQLSERVER_ENCRYPT`, default `no`
+- `SQLSERVER_TRUST_CERT`, default `yes`
+- `QUERY_TIMEOUT_SECONDS`, default `15`
+- `MAX_QUERY_ROWS`, default `500`
+- `SQLSERVER_APPROVED_SCHEMAS`, default `Application,Sales,Purchasing,Warehouse`
 
 If no SQL user/password is provided, the connection uses Windows trusted
 authentication, matching the legacy Cursor setup.
@@ -102,3 +113,4 @@ Manual Cursor and SQL Server acceptance checks are listed in
 The shared visual contract is summarized in `docs/visual_contract.md`.
 Adaptive Card rendering notes are in `docs/adaptive_card_examples.md`.
 Local HTTP setup notes are in `docs/local_http.md`.
+Database configuration notes are in `docs/database_configuration.md`.

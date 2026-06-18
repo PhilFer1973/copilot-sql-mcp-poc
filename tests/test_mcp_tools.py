@@ -36,7 +36,7 @@ class McpRegistrationTests(unittest.IsolatedAsyncioTestCase):
             "sqlserver_visual_query",
             {
                 "params": {
-                    "sql": "SELECT Customer, Balance FROM t",
+                    "sql": "SELECT Customer, Balance FROM Sales.Customers",
                     "visual_type": "horizontal_bar",
                     "title": "Balances",
                     "reason": "Ranking by balance.",
@@ -67,7 +67,7 @@ class McpRegistrationTests(unittest.IsolatedAsyncioTestCase):
             "sqlserver_copilot_visual_query",
             {
                 "params": {
-                    "sql": "SELECT Customer, Balance FROM t",
+                    "sql": "SELECT Customer, Balance FROM Sales.Customers",
                     "visual_type": "horizontal_bar",
                     "title": "Balances",
                     "reason": "Ranking by balance.",

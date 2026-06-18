@@ -57,9 +57,18 @@ class QueryServiceTests(unittest.TestCase):
         fake = FakeDatabase([{"Value": 1}, {"Value": 2}])
         service = QueryService(fake)
 
-        result = service.execute_text("SELECT Value FROM t", max_rows=2)
+        result = service.execute_text("SELECT Value FROM Sales.Customers", max_rows=2)
 
         self.assertIn("limit reached", result)
+
+    def test_execute_text_caps_requested_rows_to_configured_max(self):
+        fake = FakeDatabase([{"Value": 1}, {"Value": 2}])
+        service = QueryService(fake, max_query_rows=1)
+
+        result = service.execute_text("SELECT Value FROM Sales.Customers", max_rows=50)
+
+        self.assertIn("_1 row(s) returned", result)
+        self.assertEqual(fake.calls, [("SELECT Value FROM Sales.Customers", 1)])
 
 
 if __name__ == "__main__":

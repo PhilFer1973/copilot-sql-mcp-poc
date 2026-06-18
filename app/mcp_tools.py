@@ -324,7 +324,10 @@ def create_mcp(
     )
     async def sqlserver_visual_query(params: VisualQueryInput) -> CallToolResult:
         """Render the final business answer as an interactive analytical result."""
-        valid, validation_error = validate_read_only_sql(params.sql)
+        valid, validation_error = validate_read_only_sql(
+            params.sql,
+            approved_schemas=query_service.approved_schemas,
+        )
         if not valid:
             payload = {"error": validation_error}
             return CallToolResult(
@@ -388,7 +391,10 @@ def create_mcp(
     )
     async def sqlserver_copilot_visual_query(params: VisualQueryInput) -> CallToolResult:
         """Return a neutral result, Adaptive Card JSON, and plain-text fallback."""
-        valid, validation_error = validate_read_only_sql(params.sql)
+        valid, validation_error = validate_read_only_sql(
+            params.sql,
+            approved_schemas=query_service.approved_schemas,
+        )
         if not valid:
             payload = {
                 "business_result": {

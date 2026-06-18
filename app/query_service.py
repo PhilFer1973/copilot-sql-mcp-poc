@@ -29,23 +29,38 @@ def to_markdown_table(rows: list[dict[str, Any]]) -> str:
 class QueryService:
     """Validate, execute, and format SQL query results."""
 
-    def __init__(self, database_client: DatabaseClient) -> None:
+    def __init__(
+        self,
+        database_client: DatabaseClient,
+        max_query_rows: int | None = None,
+    ) -> None:
         self.database_client = database_client
+        self.max_query_rows = max_query_rows or getattr(
+            database_client,
+            "max_query_rows",
+            500,
+        )
+        self.approved_schemas = getattr(database_client, "approved_schemas", None)
 
     def run_rows(self, sql: str, max_rows: int = 500) -> list[dict[str, Any]]:
-        return self.database_client.run_query(sql, max_rows=max_rows)
+        effective_max_rows = min(max_rows, self.max_query_rows)
+        return self.database_client.run_query(sql, max_rows=effective_max_rows)
 
     def execute_text(self, sql: str, max_rows: int = 100, output_format: str = "markdown") -> str:
-        valid, validation_error = validate_read_only_sql(sql)
+        valid, validation_error = validate_read_only_sql(
+            sql,
+            approved_schemas=self.approved_schemas,
+        )
         if not valid:
             return f"Rejected: {validation_error}"
 
         try:
-            rows = self.run_rows(sql, max_rows=max_rows)
+            effective_max_rows = min(max_rows, self.max_query_rows)
+            rows = self.run_rows(sql, max_rows=effective_max_rows)
             row_count = f"_{len(rows)} row(s) returned"
             row_count += (
                 " (limit reached - refine your query to see more)"
-                if len(rows) == max_rows
+                if len(rows) == effective_max_rows
                 else "._"
             )
 
