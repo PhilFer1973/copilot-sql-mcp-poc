@@ -1,0 +1,17 @@
+.git
+.env
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+
+legacy/mcp_memory.txt
+legacy/mcp_pending_suggestions.txt
+legacy/mcp_queries.log
+
+tests
+docs
+*.md
+Copilot_Azure_MCP_POC_Build_Spec.md
+Codex_End_to_End_POC_Prompt.md

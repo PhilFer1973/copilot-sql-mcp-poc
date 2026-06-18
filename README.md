@@ -5,7 +5,7 @@ WideWorldImporters data through MCP.
 
 ## Current Milestone
 
-Milestone 6: database configuration and SQL safety controls.
+Milestone 7: containerisation.
 
 Status:
 
@@ -32,6 +32,9 @@ Status:
 - [x] Query timeout, max rows, encryption, trust certificate, and approved schemas are configurable.
 - [x] Cross-database, system object, unapproved schema, unqualified table, and `SELECT INTO` queries are rejected.
 - [x] `.env.example` added without secrets.
+- [x] Dockerfile added for the HTTP MCP server.
+- [x] `.dockerignore` added.
+- [x] Container build/run guide added.
 - [ ] Manual Cursor acceptance questions verified against live SQL Server.
 
 ## Local STDIO Server
@@ -114,3 +117,4 @@ The shared visual contract is summarized in `docs/visual_contract.md`.
 Adaptive Card rendering notes are in `docs/adaptive_card_examples.md`.
 Local HTTP setup notes are in `docs/local_http.md`.
 Database configuration notes are in `docs/database_configuration.md`.
+Containerisation notes are in `docs/containerization.md`.
