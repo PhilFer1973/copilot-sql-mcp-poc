@@ -1,0 +1,14 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local MCP state and internal SQL logs
+mcp_memory.txt
+mcp_pending_suggestions.txt
+mcp_queries.log
+legacy/mcp_memory.txt
+legacy/mcp_pending_suggestions.txt
+legacy/mcp_queries.log
