@@ -50,6 +50,16 @@ The structured tool result also includes:
 
 This is the payload later Copilot and Adaptive Card renderers should consume.
 
+## Adaptive Card Compatibility
+
+`app/adaptive_card_renderer.py` consumes `VisualResponse` directly and returns:
+
+- `business_result`: the public neutral payload.
+- `adaptive_card`: deterministic Adaptive Card JSON.
+- `fallback_text`: plain text fallback.
+
+The renderer does not consume SQL and does not expose `reasoning_note`.
+
 ## Validation
 
 The model validates that:

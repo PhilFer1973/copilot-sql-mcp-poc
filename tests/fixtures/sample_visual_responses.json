@@ -1,0 +1,167 @@
+[
+  {
+    "title": "Top Outstanding Balances",
+    "summary": "A small group of customers accounts for the largest balances.",
+    "visual_type": "horizontal_bar",
+    "category_field": "Customer",
+    "series": [
+      {
+        "name": "Outstanding Balance",
+        "field": "Balance",
+        "value_format": "currency",
+        "currency_code": "USD"
+      }
+    ],
+    "rows": [
+      {
+        "Customer": "A Datum Corporation",
+        "Balance": 1200.5
+      },
+      {
+        "Customer": "Contoso Retail",
+        "Balance": 900
+      }
+    ],
+    "suggested_actions": [
+      {
+        "label": "Show top 10",
+        "action": "change_top_n",
+        "parameters": {
+          "top_n": 10
+        }
+      },
+      {
+        "label": "View underlying data",
+        "action": "view_underlying_data",
+        "parameters": {}
+      }
+    ],
+    "reasoning_note": "Internal note that must not be public."
+  },
+  {
+    "title": "Monthly Invoiced Sales",
+    "summary": "Sales increased across the selected months.",
+    "visual_type": "line",
+    "category_field": "Month",
+    "series": [
+      {
+        "name": "Sales",
+        "field": "Sales",
+        "value_format": "currency",
+        "currency_code": "USD"
+      }
+    ],
+    "rows": [
+      {
+        "Month": "2024-01",
+        "Sales": 1000
+      },
+      {
+        "Month": "2024-02",
+        "Sales": 1250
+      }
+    ]
+  },
+  {
+    "title": "Total Invoiced Sales",
+    "summary": "Total invoiced sales are 2,250.",
+    "visual_type": "kpi",
+    "series": [
+      {
+        "name": "Total Sales",
+        "field": "TotalSales",
+        "value_format": "currency",
+        "currency_code": "USD"
+      }
+    ],
+    "rows": [
+      {
+        "TotalSales": 2250
+      }
+    ]
+  },
+  {
+    "title": "Recent Invoices",
+    "summary": "The latest invoices are shown below.",
+    "visual_type": "table",
+    "rows": [
+      {
+        "Invoice": "INV-1",
+        "Customer": "A Datum Corporation",
+        "InvoiceDate": "2024-02-01",
+        "Total": 100
+      }
+    ]
+  },
+  {
+    "title": "Sales Mix",
+    "summary": "Two categories make up the selected sales.",
+    "visual_type": "pie",
+    "category_field": "Category",
+    "series": [
+      {
+        "name": "Sales",
+        "field": "Sales",
+        "value_format": "number"
+      }
+    ],
+    "rows": [
+      {
+        "Category": "Retail",
+        "Sales": 60
+      },
+      {
+        "Category": "Wholesale",
+        "Sales": 40
+      }
+    ]
+  },
+  {
+    "title": "Margin Mix",
+    "summary": "Two categories make up the selected margin.",
+    "visual_type": "doughnut",
+    "category_field": "Category",
+    "series": [
+      {
+        "name": "Margin",
+        "field": "Margin",
+        "value_format": "percent"
+      }
+    ],
+    "rows": [
+      {
+        "Category": "Retail",
+        "Margin": 30
+      },
+      {
+        "Category": "Wholesale",
+        "Margin": 70
+      }
+    ]
+  },
+  {
+    "title": "Relationship",
+    "summary": "The data is better inspected as rows in this host.",
+    "visual_type": "scatter",
+    "category_field": "Quantity",
+    "series": [
+      {
+        "name": "Profit",
+        "field": "Profit",
+        "value_format": "number"
+      }
+    ],
+    "rows": [
+      {
+        "Quantity": 10,
+        "Profit": 5
+      }
+    ]
+  },
+  {
+    "title": "Empty Result",
+    "summary": "No matching rows were found.",
+    "visual_type": "table",
+    "rows": []
+  }
+]

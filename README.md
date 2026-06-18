@@ -5,7 +5,7 @@ WideWorldImporters data through MCP.
 
 ## Current Milestone
 
-Milestone 3: shared neutral visual response model.
+Milestone 4: Adaptive Card renderer.
 
 Status:
 
@@ -21,6 +21,10 @@ Status:
 - [x] Cursor visual results now pass through the neutral model.
 - [x] Cursor renderer can normalize `visual_response` payloads.
 - [x] SQL remains excluded from public visual response payloads.
+- [x] Adaptive Card renderer added for KPI, bar, horizontal bar, line, pie,
+  doughnut, table, and fallback outputs.
+- [x] Copilot-facing output helper added with business result, Adaptive Card,
+  and fallback text.
 - [ ] Manual Cursor acceptance questions verified against live SQL Server.
 
 ## Local STDIO Server
@@ -72,3 +76,4 @@ Manual Cursor and SQL Server acceptance checks are listed in
 `docs/acceptance_tests.md`.
 
 The shared visual contract is summarized in `docs/visual_contract.md`.
+Adaptive Card rendering notes are in `docs/adaptive_card_examples.md`.
