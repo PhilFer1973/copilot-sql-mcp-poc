@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -29,6 +30,14 @@ class AppPaths:
     log_file: Path
 
 
+@dataclass(frozen=True)
+class HttpServerConfig:
+    host: str = "0.0.0.0"
+    port: int = 8000
+    mcp_path: str = "/mcp"
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+
+
 def get_database_config() -> DatabaseConfig:
     """Read the legacy-compatible database configuration from the environment."""
     return DatabaseConfig(
@@ -41,6 +50,24 @@ def get_database_config() -> DatabaseConfig:
         ),
         driver=os.environ.get("SQLSERVER_DRIVER", "ODBC Driver 17 for SQL Server"),
         timeout_seconds=int(os.environ.get("QUERY_TIMEOUT_SECONDS", "15")),
+    )
+
+
+def get_http_server_config() -> HttpServerConfig:
+    """Read local Streamable HTTP server settings from the environment."""
+    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    if log_level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
+        log_level = "INFO"
+
+    mcp_path = os.environ.get("MCP_HTTP_PATH", "/mcp")
+    if not mcp_path.startswith("/"):
+        mcp_path = "/" + mcp_path
+
+    return HttpServerConfig(
+        host=os.environ.get("HOST", "0.0.0.0"),
+        port=int(os.environ.get("PORT", "8000")),
+        mcp_path=mcp_path,
+        log_level=log_level,  # type: ignore[arg-type]
     )
 
 

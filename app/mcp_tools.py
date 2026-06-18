@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
+from typing import Any, Optional
 
 import pyodbc
 from mcp.server.fastmcp import FastMCP
@@ -19,6 +19,7 @@ from .query_service import QueryService
 from .schema_service import SchemaService
 from .security import validate_read_only_sql
 from .response_models import cursor_payload_from_visual_response
+from .adaptive_card_renderer import render_copilot_tool_output
 from .visual_selection import ValueFormat, VisualType, build_visual_response
 
 
@@ -229,6 +230,7 @@ class VisualQueryInput(BaseModel):
 def create_mcp(
     database_client: DatabaseClient | None = None,
     paths: AppPaths | None = None,
+    fastmcp_kwargs: dict[str, Any] | None = None,
 ) -> FastMCP:
     """Create a FastMCP server with the preserved SQL Server tools."""
     resolved_paths = paths or get_app_paths()
@@ -240,7 +242,11 @@ def create_mcp(
         resolved_paths.pending_file,
     )
 
-    mcp = FastMCP("sqlserver_mcp", instructions=build_instructions())
+    mcp = FastMCP(
+        "sqlserver_mcp",
+        instructions=build_instructions(),
+        **(fastmcp_kwargs or {}),
+    )
 
     @mcp.tool(
         name="sqlserver_get_schema",
@@ -370,6 +376,55 @@ def create_mcp(
                 structuredContent=payload,
                 isError=True,
             )
+
+    @mcp.tool(
+        name="sqlserver_copilot_visual_query",
+        annotations={
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )
+    async def sqlserver_copilot_visual_query(params: VisualQueryInput) -> CallToolResult:
+        """Return a neutral result, Adaptive Card JSON, and plain-text fallback."""
+        valid, validation_error = validate_read_only_sql(params.sql)
+        if not valid:
+            payload = {
+                "business_result": {
+                    "title": "Query rejected",
+                    "summary": validation_error,
+                    "visual_type": "table",
+                    "columns": [],
+                    "rows": [],
+                    "suggested_actions": [],
+                },
+                "adaptive_card": {},
+                "fallback_text": f"Query rejected: {validation_error}",
+            }
+            return CallToolResult(
+                content=[TextContent(type="text", text=payload["fallback_text"])],
+                structuredContent=payload,
+                isError=True,
+            )
+
+        rows = query_service.run_rows(params.sql, max_rows=params.max_rows)
+        response = build_visual_response(
+            title=params.title,
+            summary=params.summary or params.reason,
+            reasoning_note=params.reason,
+            visual_type=params.visual_type,
+            rows=rows,
+            category_field=params.x_field,
+            series_fields=params.y_fields,
+            value_format=params.value_format,
+            currency_code=params.currency_code,
+        )
+        payload = render_copilot_tool_output(response)
+        return CallToolResult(
+            content=[TextContent(type="text", text=payload["fallback_text"])],
+            structuredContent=payload,
+        )
 
     @mcp.resource(
         CHART_VIEW_URI,

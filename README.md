@@ -5,7 +5,7 @@ WideWorldImporters data through MCP.
 
 ## Current Milestone
 
-Milestone 4: Adaptive Card renderer.
+Milestone 5: local Streamable HTTP MCP server.
 
 Status:
 
@@ -25,6 +25,9 @@ Status:
   doughnut, table, and fallback outputs.
 - [x] Copilot-facing output helper added with business result, Adaptive Card,
   and fallback text.
+- [x] Streamable HTTP entry point added as `server_http.py`.
+- [x] `/health` endpoint added.
+- [x] MCP HTTP endpoint defaults to `/mcp`.
 - [ ] Manual Cursor acceptance questions verified against live SQL Server.
 
 ## Local STDIO Server
@@ -33,6 +36,27 @@ Run the refactored Cursor-compatible MCP server with:
 
 ```powershell
 python server_stdio.py
+```
+
+## Local Streamable HTTP Server
+
+Run the local HTTP MCP server with:
+
+```powershell
+python server_http.py
+```
+
+Defaults:
+
+- host: `0.0.0.0`
+- port: `8000`, or `PORT` if set
+- MCP endpoint: `/mcp`, or `MCP_HTTP_PATH` if set
+- health endpoint: `/health`
+
+Example health URL:
+
+```text
+http://localhost:8000/health
 ```
 
 The original working implementation remains available at:
@@ -77,3 +101,4 @@ Manual Cursor and SQL Server acceptance checks are listed in
 
 The shared visual contract is summarized in `docs/visual_contract.md`.
 Adaptive Card rendering notes are in `docs/adaptive_card_examples.md`.
+Local HTTP setup notes are in `docs/local_http.md`.
