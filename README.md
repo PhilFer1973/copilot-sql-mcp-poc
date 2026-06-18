@@ -5,7 +5,7 @@ WideWorldImporters data through MCP.
 
 ## Current Milestone
 
-Milestone 8: Azure deployment documentation.
+Milestone 9: Copilot Studio integration documentation.
 
 Status:
 
@@ -37,6 +37,8 @@ Status:
 - [x] Container build/run guide added.
 - [x] Azure App Service / ACR deployment guide added.
 - [x] Hybrid Connection and SQL Server Express preparation steps documented.
+- [x] Copilot Studio MCP onboarding guide added.
+- [x] Copilot Studio testing and publish steps documented.
 - [ ] Manual Cursor acceptance questions verified against live SQL Server.
 
 ## Local STDIO Server
@@ -121,3 +123,4 @@ Local HTTP setup notes are in `docs/local_http.md`.
 Database configuration notes are in `docs/database_configuration.md`.
 Containerisation notes are in `docs/containerization.md`.
 Azure deployment notes are in `AZURE_DEPLOYMENT.md`.
+Copilot Studio integration notes are in `COPILOT_STUDIO_INTEGRATION.md`.
