@@ -5,7 +5,7 @@ WideWorldImporters data through MCP.
 
 ## Current Milestone
 
-Milestone 2: behavior-preserving refactor.
+Milestone 3: shared neutral visual response model.
 
 Status:
 
@@ -17,6 +17,10 @@ Status:
 - [x] Data dictionary copied from the legacy implementation.
 - [x] Cursor renderer copied from the legacy implementation.
 - [x] Unit tests added for SQL validation and result handling.
+- [x] Shared `VisualResponse` model added.
+- [x] Cursor visual results now pass through the neutral model.
+- [x] Cursor renderer can normalize `visual_response` payloads.
+- [x] SQL remains excluded from public visual response payloads.
 - [ ] Manual Cursor acceptance questions verified against live SQL Server.
 
 ## Local STDIO Server
@@ -66,3 +70,5 @@ python -m unittest discover -s tests -p "test_*.py" -v
 
 Manual Cursor and SQL Server acceptance checks are listed in
 `docs/acceptance_tests.md`.
+
+The shared visual contract is summarized in `docs/visual_contract.md`.

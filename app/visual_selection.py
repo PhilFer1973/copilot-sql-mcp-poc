@@ -1,22 +1,16 @@
-"""Validation and payload building for Cursor visual results."""
+"""Validation and payload building for visual results."""
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any
 
-
-VisualType = Literal[
-    "table",
-    "kpi",
-    "bar",
-    "horizontal_bar",
-    "line",
-    "scatter",
-    "pie",
-    "doughnut",
-]
-
-ValueFormat = Literal["number", "currency", "percent"]
+from .response_models import (
+    SeriesDefinition,
+    ValueFormat,
+    VisualResponse,
+    VisualType,
+    cursor_payload_from_visual_response,
+)
 
 
 def is_numeric(value: Any) -> bool:
@@ -114,30 +108,67 @@ def build_visual_payload(
     currency_code: str,
 ) -> dict[str, Any]:
     """Build and validate the JSON payload consumed by the Cursor MCP App."""
+    response = build_visual_response(
+        title=title,
+        summary=reason,
+        reasoning_note=reason,
+        visual_type=visual_type,
+        rows=rows,
+        category_field=x_field,
+        series_fields=y_fields,
+        value_format=value_format,
+        currency_code=currency_code,
+    )
+    return cursor_payload_from_visual_response(response)
+
+
+def build_visual_response(
+    title: str,
+    summary: str,
+    reasoning_note: str | None,
+    visual_type: VisualType,
+    rows: list[dict[str, Any]],
+    category_field: str | None,
+    series_fields: list[str],
+    value_format: ValueFormat,
+    currency_code: str,
+) -> VisualResponse:
+    """Build and validate the neutral visual response model."""
     columns = list(rows[0].keys()) if rows else []
     final_type, fallback_reason = validate_visual_choice(
         visual_type,
         rows,
-        x_field,
-        y_fields,
+        category_field,
+        series_fields,
     )
 
-    final_reason = reason
+    final_reasoning_note = reasoning_note
     if fallback_reason:
-        final_reason = f"{reason} Server fallback: {fallback_reason}"
+        final_reasoning_note = (
+            f"{reasoning_note or summary} Server fallback: {fallback_reason}"
+        )
 
-    return {
-        "title": title,
-        "reason": final_reason,
-        "visual_type": final_type,
-        "x_field": x_field,
-        "y_fields": y_fields,
-        "value_format": value_format,
-        "currency_code": currency_code.upper(),
-        "columns": columns,
-        "row_count": len(rows),
-        "rows": rows,
-    }
+    series = [
+        SeriesDefinition(
+            name=field,
+            field=field,
+            value_format=value_format,
+            currency_code=currency_code if value_format == "currency" else None,
+        )
+        for field in series_fields
+        if rows and field in columns
+    ]
+
+    return VisualResponse(
+        title=title,
+        summary=summary,
+        visual_type=final_type,
+        category_field=category_field if rows and category_field in columns else None,
+        series=series,
+        columns=columns,
+        rows=rows,
+        reasoning_note=final_reasoning_note,
+    )
 
 
 _is_numeric = is_numeric

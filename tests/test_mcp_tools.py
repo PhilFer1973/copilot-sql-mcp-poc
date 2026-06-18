@@ -1,6 +1,11 @@
 import unittest
 
-from app.mcp_tools import mcp
+from app.mcp_tools import create_mcp, mcp
+
+
+class FakeDatabase:
+    def run_query(self, sql, max_rows=500):
+        return [{"Customer": "A", "Balance": 10}]
 
 
 class McpRegistrationTests(unittest.IsolatedAsyncioTestCase):
@@ -22,6 +27,37 @@ class McpRegistrationTests(unittest.IsolatedAsyncioTestCase):
             [str(resource.uri) for resource in resources],
             ["ui://sqlserver-mcp/chart-view.html"],
         )
+
+    async def test_visual_tool_includes_neutral_visual_response(self):
+        server = create_mcp(database_client=FakeDatabase())
+
+        result = await server.call_tool(
+            "sqlserver_visual_query",
+            {
+                "params": {
+                    "sql": "SELECT Customer, Balance FROM t",
+                    "visual_type": "horizontal_bar",
+                    "title": "Balances",
+                    "reason": "Ranking by balance.",
+                    "summary": "A has the highest balance.",
+                    "x_field": "Customer",
+                    "y_fields": ["Balance"],
+                    "value_format": "currency",
+                    "currency_code": "GBP",
+                }
+            },
+        )
+
+        payload = result.structuredContent
+        self.assertEqual(payload["x_field"], "Customer")
+        self.assertEqual(payload["y_fields"], ["Balance"])
+        self.assertIn("visual_response", payload)
+        self.assertEqual(
+            payload["visual_response"]["summary"],
+            "A has the highest balance.",
+        )
+        self.assertNotIn("reasoning_note", payload["visual_response"])
+        self.assertNotIn("sql", payload["visual_response"])
 
 
 if __name__ == "__main__":

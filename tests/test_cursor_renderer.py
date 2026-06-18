@@ -9,6 +9,8 @@ class CursorRendererTests(unittest.TestCase):
         self.assertIn('id="visual-tab"', CHART_VIEW_HTML)
         self.assertIn('id="data-tab"', CHART_VIEW_HTML)
         self.assertIn("chart.umd.min.js", CHART_VIEW_HTML)
+        self.assertIn("function normalizePayload", CHART_VIEW_HTML)
+        self.assertIn("payload.visual_response", CHART_VIEW_HTML)
         self.assertIn("app.ontoolresult", CHART_VIEW_HTML)
         self.assertIn("structuredContent", CHART_VIEW_HTML)
 

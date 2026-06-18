@@ -347,9 +347,45 @@ CHART_VIEW_HTML = r"""<!DOCTYPE html>
       () => switchPanel("data")
     );
 
+    function normalizePayload(payload) {
+      if (!payload) return payload;
+
+      const visualResponse = payload.visual_response
+        || (
+          payload.summary
+          && Array.isArray(payload.series)
+          && Array.isArray(payload.rows)
+          ? payload
+          : null
+        );
+
+      if (!visualResponse) return payload;
+
+      const series = visualResponse.series || [];
+      const firstSeries = series[0] || {};
+      const valueFormat = firstSeries.value_format || payload.value_format || "number";
+
+      return {
+        ...payload,
+        title: visualResponse.title,
+        reason: visualResponse.summary || payload.reason || "",
+        visual_type: visualResponse.visual_type,
+        x_field: visualResponse.category_field,
+        y_fields: series.map(item => item.field),
+        value_format: ["currency", "percent"].includes(valueFormat)
+          ? valueFormat
+          : "number",
+        currency_code:
+          firstSeries.currency_code || payload.currency_code || "USD",
+        columns: visualResponse.columns || payload.columns || [],
+        row_count: (visualResponse.rows || []).length,
+        rows: visualResponse.rows || []
+      };
+    }
+
     app.ontoolresult = result => {
       try {
-        const payload = result.structuredContent;
+        const payload = normalizePayload(result.structuredContent);
 
         if (!payload) {
           throw new Error("No structured visual payload was returned.");

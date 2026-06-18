@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Literal, Optional
+from typing import Optional
 
 import pyodbc
 from mcp.server.fastmcp import FastMCP
@@ -18,7 +18,8 @@ from .memory_service import MemoryService
 from .query_service import QueryService
 from .schema_service import SchemaService
 from .security import validate_read_only_sql
-from .visual_selection import ValueFormat, VisualType, build_visual_payload
+from .response_models import cursor_payload_from_visual_response
+from .visual_selection import ValueFormat, VisualType, build_visual_response
 
 
 def build_instructions(data_dictionary: str = DATA_DICTIONARY) -> str:
@@ -191,6 +192,15 @@ class VisualQueryInput(BaseModel):
             "the returned data shape."
         ),
     )
+    summary: Optional[str] = Field(
+        default=None,
+        min_length=3,
+        max_length=500,
+        description=(
+            "Concise business-facing summary. If omitted, the visual reason is "
+            "used as the summary for backwards compatibility."
+        ),
+    )
     x_field: Optional[str] = Field(
         default=None,
         description=(
@@ -319,16 +329,19 @@ def create_mcp(
 
         try:
             rows = query_service.run_rows(params.sql, max_rows=params.max_rows)
-            payload = build_visual_payload(
+            response = build_visual_response(
                 title=params.title,
-                reason=params.reason,
+                summary=params.summary or params.reason,
+                reasoning_note=params.reason,
                 visual_type=params.visual_type,
                 rows=rows,
-                x_field=params.x_field,
-                y_fields=params.y_fields,
+                category_field=params.x_field,
+                series_fields=params.y_fields,
                 value_format=params.value_format,
                 currency_code=params.currency_code,
             )
+            payload = cursor_payload_from_visual_response(response)
+            payload["visual_response"] = response.public_payload()
 
             summary = (
                 f"{payload['title']}: {payload['row_count']} row(s), "

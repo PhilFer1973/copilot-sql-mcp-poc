@@ -1,6 +1,12 @@
 import unittest
 
-from app.visual_selection import build_visual_payload, is_numeric, validate_visual_choice
+from app.response_models import VisualResponse
+from app.visual_selection import (
+    build_visual_payload,
+    build_visual_response,
+    is_numeric,
+    validate_visual_choice,
+)
 
 
 class VisualSelectionTests(unittest.TestCase):
@@ -75,6 +81,25 @@ class VisualSelectionTests(unittest.TestCase):
         self.assertEqual(payload["row_count"], 1)
         self.assertEqual(payload["rows"], rows)
         self.assertNotIn("sql", payload)
+
+    def test_build_visual_response_returns_neutral_model(self):
+        response = build_visual_response(
+            title="Outstanding Balances",
+            summary="A has the highest balance.",
+            reasoning_note="Ranking by balance.",
+            visual_type="horizontal_bar",
+            rows=[{"Customer": "A", "Balance": 10}],
+            category_field="Customer",
+            series_fields=["Balance"],
+            value_format="currency",
+            currency_code="usd",
+        )
+
+        self.assertIsInstance(response, VisualResponse)
+        self.assertEqual(response.summary, "A has the highest balance.")
+        self.assertEqual(response.category_field, "Customer")
+        self.assertEqual(response.series[0].field, "Balance")
+        self.assertEqual(response.series[0].currency_code, "USD")
 
 
 if __name__ == "__main__":
