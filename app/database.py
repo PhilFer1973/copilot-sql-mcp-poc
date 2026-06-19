@@ -43,7 +43,8 @@ class DatabaseClient:
         try:
             conn = self.get_connection()
             cursor = conn.cursor()
-            cursor.timeout = self.timeout_seconds
+            if hasattr(cursor, "timeout"):
+                cursor.timeout = self.timeout_seconds
             cursor.execute(sql)
             columns = [col[0] for col in cursor.description]
             rows = [
