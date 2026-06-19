@@ -20,7 +20,7 @@ class HealthyDatabase:
 
 class BrokenDatabase:
     def run_query(self, sql, max_rows=500):
-        raise RuntimeError("database unavailable")
+        raise RuntimeError("database unavailable; PWD=secret-password;")
 
 
 class HttpServerTests(unittest.TestCase):
@@ -55,12 +55,16 @@ class HttpServerTests(unittest.TestCase):
         self.assertEqual(database.calls, [("SELECT 1 AS health_check", 1)])
 
     def test_health_payload_reports_unreachable_database_safely(self):
-        payload, status_code = build_health_payload(BrokenDatabase())
+        with self.assertLogs("app.health", level="WARNING") as logs:
+            payload, status_code = build_health_payload(BrokenDatabase())
 
         self.assertEqual(status_code, 503)
         self.assertEqual(payload["status"], "degraded")
         self.assertEqual(payload["database"], "unreachable")
         self.assertNotIn("database unavailable", str(payload))
+        self.assertIn("database unavailable", logs.output[0])
+        self.assertIn("PWD=<redacted>", logs.output[0])
+        self.assertNotIn("secret-password", logs.output[0])
 
     def test_http_app_exposes_health_and_mcp_endpoint(self):
         mcp = create_http_mcp(
